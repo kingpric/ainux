@@ -4,6 +4,8 @@
 BITS 16
 ORG 0X7C00
 
+%define OS_NAME "Ainux"
+
 start:
     cli             ; clear interrupt flag
 
@@ -15,7 +17,7 @@ start:
 
     sti             ; set interrupt flag
 
-    mov si, message ; set SI (Source index) to start location of message
+    mov si, welcome_msg ; set SI (Source index) to start location of message
 
 print_loop:
     lodsb           ; load string byte to al from [si] and increament si = si + 1 
@@ -29,7 +31,7 @@ print_loop:
 done:               
     jmp $           ; unconditional jmp to here only
 
-message db "Hello from Praveen's OS!",0
+welcome_msg db "Welcome to ", OS_NAME, " - Stage 1", 0
 
 times 510-($-$$) db 0   ; set remaining bytes to 0 upto 510 address
 dw 0xaa55           ; boot magic number
