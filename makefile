@@ -1,7 +1,7 @@
 # Ainux OS Makefile
 
-BOOT_DIR = boot
-BUILD_DIR = build
+BOOT_DIR = ./src/boot
+BUILD_DIR = ./build
 
 STAGE1 = $(BOOT_DIR)/stage1.asm
 STAGE2 = $(BOOT_DIR)/stage2.asm
