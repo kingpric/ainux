@@ -9,9 +9,11 @@ BUILD_DIR = $(BASE_DIR)/build
 # Files
 STAGE1 = $(BOOT_DIR)/stage1.asm
 STAGE2 = $(BOOT_DIR)/stage2.asm
+KERNEL = $(SRC_DIR)/kernel/kernel.asm
 
 STAGE1_BIN = $(BUILD_DIR)/stage1.bin
 STAGE2_BIN = $(BUILD_DIR)/stage2.bin
+KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 
 DISK_IMAGE = $(BUILD_DIR)/disk.img
 
@@ -29,11 +31,16 @@ $(STAGE1_BIN): $(STAGE1) | $(BUILD_DIR)
 $(STAGE2_BIN): $(STAGE2) | $(BUILD_DIR)
 	nasm -f bin $< -o $@
 
+# create kernel binary
+$(KERNEL_BIN): $(KERNEL) | $(BUILD_DIR)
+	nasm -f bin $< -o $@
+
 # create disk image
-$(DISK_IMAGE): $(STAGE1_BIN) $(STAGE2_BIN)
-	dd if=/dev/zero of=$(DISK_IMAGE) bs=512 count=2880
+$(DISK_IMAGE): $(STAGE1_BIN) $(STAGE2_BIN) $(KERNEL_BIN)
+	dd if=/dev/zero of=$(DISK_IMAGE) bs=512 count=100
 	dd if=$(STAGE1_BIN) of=$(DISK_IMAGE) conv=notrunc
 	dd if=$(STAGE2_BIN) of=$(DISK_IMAGE) bs=512 seek=1 conv=notrunc
+	dd if=$(KERNEL_BIN) of=$(DISK_IMAGE) bs=512 seek=2 conv=notrunc
 
 # run final image in qemu 
 run: $(DISK_IMAGE)
