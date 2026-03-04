@@ -1,53 +1,27 @@
-# Ainux OS Makefile
+SRC_DIR = ./src
+BUILD_DIR = ./build
 
-# Directories
-BASE_DIR = .
-SRC_DIR = $(BASE_DIR)/src
-BOOT_DIR = $(SRC_DIR)/boot
-BUILD_DIR = $(BASE_DIR)/build
+all: $(BUILD_DIR)/disk.img
 
-# Files
-STAGE1 = $(BOOT_DIR)/stage1.asm
-STAGE2 = $(BOOT_DIR)/stage2.asm
-KERNEL = $(SRC_DIR)/kernel/kernel.asm
-
-STAGE1_BIN = $(BUILD_DIR)/stage1.bin
-STAGE2_BIN = $(BUILD_DIR)/stage2.bin
-KERNEL_BIN = $(BUILD_DIR)/kernel.bin
-
-DISK_IMAGE = $(BUILD_DIR)/disk.img
-
-all: $(DISK_IMAGE)
-
-# Rules
-$(BUILD_DIR):
+build_path:
 	mkdir -p $(BUILD_DIR)
 
-# create stage1 binary
-$(STAGE1_BIN): $(STAGE1) | $(BUILD_DIR)
+$(BUILD_DIR)/boot.bin:$(SRC_DIR)/boot/boot.asm | build_path
 	nasm -f bin $< -o $@
 
-# create stage2 binary
-$(STAGE2_BIN): $(STAGE2) | $(BUILD_DIR)
+$(BUILD_DIR)/kernel.bin:$(SRC_DIR)/kernel.asm | build_path
 	nasm -f bin $< -o $@
 
-# create kernel binary
-$(KERNEL_BIN): $(KERNEL) | $(BUILD_DIR)
-	nasm -f bin $< -o $@
-
-# create disk image
-$(DISK_IMAGE): $(STAGE1_BIN) $(STAGE2_BIN) $(KERNEL_BIN)
-	dd if=/dev/zero of=$(DISK_IMAGE) bs=512 count=100
-	dd if=$(STAGE1_BIN) of=$(DISK_IMAGE) conv=notrunc
-	dd if=$(STAGE2_BIN) of=$(DISK_IMAGE) bs=512 seek=1 conv=notrunc
-	dd if=$(KERNEL_BIN) of=$(DISK_IMAGE) bs=512 seek=2 conv=notrunc
+$(BUILD_DIR)/disk.img:$(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
+	dd if=/dev/zero of=$@ bs=512 count=2880
+	dd if=$(BUILD_DIR)/boot.bin of=$@ conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$@ seek=1 conv=notrunc
 
 # run final image in qemu 
-run: $(DISK_IMAGE)
-	qemu-system-i386 -drive format=raw,file=$(DISK_IMAGE) -nographic
+run: $(BUILD_DIR)/disk.img
+	qemu-system-i386 -drive format=raw,file=$< -nographic
 
-# clean build directory
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all run clean
+.PHONY: all

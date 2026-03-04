@@ -1,35 +1,49 @@
 [BITS 16]
-ORG 0x8000
+ORG 0x7C00
 
-CODE_SEG            equ gdt_code - gdt_start
-DATA_SEG            equ gdt_data - gdt_start
+CODE_SEG                equ gdt_code - gdt_start
+DATA_SEG                equ gdt_data - gdt_start
 
-KERNEL_LOAD_ADDR    equ 0x00100000
-KERNEL_LBA          equ 2
-KERNEL_SECTORS      equ 6
+STACK_ADDR              equ 0x90000
 
-ATA_DATA_PORT            equ 0x1F0
-ATA_SEC_COUNT_PORT       equ 0x1F2
-ATA_LBA_LOW_PORT         equ 0x1F3
-ATA_LBA_MID_PORT         equ 0x1F4
-ATA_LBA_HIGH_PORT        equ 0x1F5
-ATA_DRIVE_PORT           equ 0x1F6
-ATA_STATUS_PORT          equ 0x1F7
-ATA_COMMAND_PORT         equ 0x1F7
+KERNEL_LOAD_ADDR        equ 0x100000
+KERNEL_LBA              equ 1
+KERNEL_SECTORS          equ 6
 
-ATA_CMD_READ        equ 0x20
+ATA_DATA_PORT           equ 0x1F0
+ATA_SEC_COUNT_PORT      equ 0x1F2
+ATA_LBA_LOW_PORT        equ 0x1F3
+ATA_LBA_MID_PORT        equ 0x1F4
+ATA_LBA_HIGH_PORT       equ 0x1F5
+ATA_DRIVE_PORT          equ 0x1F6
+ATA_STATUS_PORT         equ 0x1F7
+ATA_COMMAND_PORT        equ 0x1F7
 
-
-start_stage2:
-    cli
+ATA_CMD_READ            equ 0x20
 
 ; ----------------------------
-; Enable A20 (Fast method)
+; 16-bit Real Mode Code
 ; ----------------------------
-    in al, 0x92
-    or al, 00000010b
-    out 0x92, al
-         
+start_boot:
+    cli                 ; clear interrupt flag
+
+    xor ax, ax          ; clear ax
+    mov ds, ax          ; set data segment to 0
+    mov es, ax          ; set extra segment to 0
+    mov ss, ax          ; set stack segment to 0
+
+    mov sp, 0x7C00      ; set stack pointer
+
+    jmp enable_a20
+
+; ----------------------------
+; Enable A20 (Fast method) 
+; ----------------------------
+enable_a20:
+    in al, 0x92         ; read from port 0x92 (system control port)
+    or al, 00000010b    ; set bit 1 (enable A20)
+    out 0x92, al        ; write to port 0x92
+
 ; ----------------------------
 ; Load GDT
 ; ----------------------------
@@ -41,12 +55,25 @@ load_gdt:
 ; Enable Protected Mode
 ; ----------------------------
 enable_pm:
-    mov eax, cr0
-    or eax, 1
-    mov cr0, eax
+    mov eax, cr0            ; load cr0 into eax
+    or eax, 1               ; set bit 0 (enable protected mode)
+    mov cr0, eax            ; store cr0 back into cr0
+
+    cld                 ; ensure forward direction
+
+    mov ax, DATA_SEG    ; load data segment selector
+    mov ds, ax          ; set data segment
+    mov es, ax          ; set extra segment
+    mov fs, ax          ; set fs segment
+    mov gs, ax          ; set gs segment
+    mov ss, ax          ; set stack segment
+
+    mov esp, STACK_ADDR ; set stack pointer
+
 
     ; Far jump to flush pipeline
     jmp CODE_SEG:protected_mode_entry   ; 0x08 is the code segment selector
+
 
 ; ============================
 ; GDT Definition
@@ -83,27 +110,18 @@ gdt_descriptor:
 
 
 
+[BITS 32]
 ; ============================
 ; 32-bit Protected Mode Code
 ; ============================
-
-[BITS 32]
 protected_mode_entry:
-
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    mov esp, 0x90000
     call load_kernel
     jmp KERNEL_LOAD_ADDR
 
 ; ----------------------------
 ; Load Kernel (6 sectors)
 ; ----------------------------
-global load_kernel
+; global load_kernel
 
 load_kernel:
 
@@ -172,10 +190,8 @@ load_kernel:
     ; -------------------------
     ; Read 512 bytes
     ; -------------------------
-
     mov dx, ATA_DATA_PORT
     mov ecx, 256
-    cld                 ; ensure forward direction
     rep insw
 
     pop ecx
@@ -188,4 +204,10 @@ load_kernel:
     cli
 .hang:
     hlt
-    jmp .hang
+    jmp .hang    
+
+; ----------------------------
+; Boot Sector Padding & Magic Number
+; ----------------------------
+times 510 - ($ - $$) db 0
+dw 0xAA55
