@@ -2,10 +2,13 @@ SRC_DIR = ./src
 BUILD_DIR = ./build
 
 INCLUDE= -I./src/
-CFLAGS=		-g -std=gnu99 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -Wall -Werror -O0
-LDFLAGS=	-T linker.ld
+CFLAGS=	$(INCLUDE) -g -std=gnu99 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -Wall -Werror -O0
+LDFLAGS= -T linker.ld
 
-FILES=	$(BUILD_DIR)/kernel.asm.o $(BUILD_DIR)/kernel.o
+FILES= $(BUILD_DIR)/kernel.asm.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/screen.o
+
+KERNEL_SIZE := $(shell stat -c%s build/kernel.bin)
+KERNEL_SECTORS := $$(($$KERNEL_SIZE / 512 + 1))
 
 all: build_path $(BUILD_DIR)/disk.img
 
@@ -23,9 +26,12 @@ $(BUILD_DIR)/boot.bin: $(SRC_DIR)/boot/boot.asm
 # -------------------------
 $(BUILD_DIR)/kernel.asm.o: $(SRC_DIR)/kernel.asm
 	nasm -f elf32 $< -o $@
-	
+
 $(BUILD_DIR)/kernel.o: $(SRC_DIR)/kernel.c
-	i686-elf-gcc $(INCLUDE) $(CFLAGS) -c $< -o $@
+	i686-elf-gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/screen.o: $(SRC_DIR)/drivers/screen/screen.c
+	i686-elf-gcc $(CFLAGS) -c $< -o $@
 
 # -------------------------
 # Link kernel ELF

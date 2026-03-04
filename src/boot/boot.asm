@@ -8,7 +8,7 @@ STACK_ADDR              equ 0x90000
 
 KERNEL_LOAD_ADDR        equ 0x100000
 KERNEL_LBA              equ 1
-KERNEL_SECTORS          equ 6
+KERNEL_SECTORS          equ 100
 
 ATA_DATA_PORT           equ 0x1F0
 ATA_SEC_COUNT_PORT      equ 0x1F2
