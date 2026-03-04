@@ -1,18 +1,47 @@
 SRC_DIR = ./src
 BUILD_DIR = ./build
 
-all: $(BUILD_DIR)/disk.img
+INCLUDE= -I./src/
+CFLAGS=		-g -std=gnu99 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -Wall -Werror -O0
+LDFLAGS=	-T linker.ld
+
+FILES=	$(BUILD_DIR)/kernel.asm.o $(BUILD_DIR)/kernel.o
+
+all: build_path $(BUILD_DIR)/disk.img
 
 build_path:
 	mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/boot.bin:$(SRC_DIR)/boot/boot.asm | build_path
+# -------------------------
+# Bootloader (flat binary)
+# -------------------------
+$(BUILD_DIR)/boot.bin: $(SRC_DIR)/boot/boot.asm
 	nasm -f bin $< -o $@
 
-$(BUILD_DIR)/kernel.bin:$(SRC_DIR)/kernel.asm | build_path
-	nasm -f bin $< -o $@
+# -------------------------
+# Kernel objects
+# -------------------------
+$(BUILD_DIR)/kernel.asm.o: $(SRC_DIR)/kernel.asm
+	nasm -f elf32 $< -o $@
+	
+$(BUILD_DIR)/kernel.o: $(SRC_DIR)/kernel.c
+	i686-elf-gcc $(INCLUDE) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/disk.img:$(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
+# -------------------------
+# Link kernel ELF
+# -------------------------
+$(BUILD_DIR)/kernel.elf: $(FILES)
+	i686-elf-ld $(LDFLAGS) $^ -o $@
+
+# Convert ELF → flat binary
+$(BUILD_DIR)/kernel.bin: $(BUILD_DIR)/kernel.elf
+	i686-elf-objcopy -O binary $< $@
+
+
+# -------------------------
+# Create disk image
+# -------------------------
+$(BUILD_DIR)/disk.img: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
 	dd if=/dev/zero of=$@ bs=512 count=2880
 	dd if=$(BUILD_DIR)/boot.bin of=$@ conv=notrunc
 	dd if=$(BUILD_DIR)/kernel.bin of=$@ seek=1 conv=notrunc
@@ -24,4 +53,4 @@ run: $(BUILD_DIR)/disk.img
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all
+.PHONY: all clean run build_path

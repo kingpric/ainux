@@ -1,20 +1,15 @@
 [BITS 32]
-ORG 0x100000
 
-kernel_entry:
+global _start
+extern kernel_main
 
-    mov edi, 0xB8000
-    mov esi, kernel_message
+section .text
 
-print_kernel:
-    lodsb
-    cmp al, 0
-    je done_kernel
-    mov ah, 0x0A
-    stosw
-    jmp print_kernel
+_start:
+    ; mov esp, 0x200000      ; Set stack (2MB)
 
-done_kernel:
-    jmp $
+    call kernel_main
 
-kernel_message db "Ainux Kernel @ 1MB", 0  
+.hang:
+    hlt
+    jmp .hang
