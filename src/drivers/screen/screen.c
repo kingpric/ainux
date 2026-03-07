@@ -16,6 +16,51 @@ static size_t col = 0;
 static uint8_t color = 0x0F;
 
 /**
+ * @brief Scrolls the screen up by one row.
+ */
+static void screen_scroll()
+{
+    // Move rows up
+    for (size_t r = 1; r < VGA_HEIGHT; r++)
+    {
+        for (size_t c = 0; c < VGA_WIDTH; c++)
+        {
+            vga[(r - 1) * VGA_WIDTH + c] =
+                vga[r * VGA_WIDTH + c];
+        }
+    }
+
+    // Clear last row
+    for (size_t c = 0; c < VGA_WIDTH; c++)
+    {
+        vga[(VGA_HEIGHT - 1) * VGA_WIDTH + c] =
+            ((uint16_t)color << 8) | ' ';
+    }
+
+    row = VGA_HEIGHT - 1;
+}
+
+static inline void outb(uint16_t port, uint8_t value)
+{
+    __asm__ volatile (
+        "outb %0, %1"
+        :
+        : "a"(value), "Nd"(port)
+    );
+}
+
+static void screen_update_cursor(void)
+{
+    uint16_t position = row * VGA_WIDTH + col;
+
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t)(position & 0xFF));
+
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t)((position >> 8) & 0xFF));
+}
+
+/**
  * @brief Clears entire VGA text buffer.
  */
 void screen_clear()
@@ -49,9 +94,10 @@ void screen_put_char(char c)
 
         if (row >= VGA_HEIGHT)
         {
-            row = 0;   // temporary wrap
+            screen_scroll();
         }
 
+        screen_update_cursor();
         return;
     }
 
@@ -69,9 +115,11 @@ void screen_put_char(char c)
 
         if (row >= VGA_HEIGHT)
         {
-            row = 0;
+            screen_scroll();
         }
     }
+
+    screen_update_cursor();
 }
 
 /**
@@ -84,3 +132,4 @@ void screen_write(const char* str)
         screen_put_char(str[i]);
     }
 }
+

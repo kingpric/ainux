@@ -4,8 +4,11 @@ BUILD_DIR = ./build
 INCLUDE= -I./src/
 CFLAGS=	$(INCLUDE) -g -std=gnu99 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -Wall -Werror -O0
 LDFLAGS= -T linker.ld
+ASMFLAGS= -f elf32 -g
 
-FILES= $(BUILD_DIR)/kernel.asm.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/screen.o
+FILES= 	$(BUILD_DIR)/kernel.asm.o $(BUILD_DIR)/kernel.o \
+		$(BUILD_DIR)/drivers/screen/screen.o \
+		$(BUILD_DIR)/idt/idt.asm.o $(BUILD_DIR)/idt/idt.o 
 
 KERNEL_SIZE := $(shell stat -c%s build/kernel.bin)
 KERNEL_SECTORS := $$(($$KERNEL_SIZE / 512 + 1))
@@ -14,6 +17,9 @@ all: build_path $(BUILD_DIR)/disk.img
 
 build_path:
 	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)/drivers
+	mkdir -p $(BUILD_DIR)/drivers/screen
+	mkdir -p $(BUILD_DIR)/idt
 
 # -------------------------
 # Bootloader (flat binary)
@@ -25,12 +31,21 @@ $(BUILD_DIR)/boot.bin: $(SRC_DIR)/boot/boot.asm
 # Kernel objects
 # -------------------------
 $(BUILD_DIR)/kernel.asm.o: $(SRC_DIR)/kernel.asm
-	nasm -f elf32 $< -o $@
+	nasm $(ASMFLAGS) $< -o $@
 
 $(BUILD_DIR)/kernel.o: $(SRC_DIR)/kernel.c
 	i686-elf-gcc $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/screen.o: $(SRC_DIR)/drivers/screen/screen.c
+$(BUILD_DIR)/drivers/screen/screen.o: $(SRC_DIR)/drivers/screen/screen.c
+	i686-elf-gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/idt/idt.o: $(SRC_DIR)/idt/idt.c
+	i686-elf-gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/idt/idt.asm.o: $(SRC_DIR)/idt/idt.asm
+	nasm $(ASMFLAGS) $< -o $@
+
+$(BUILD_DIR)/idt/idt.o: $(SRC_DIR)/idt/idt.c
 	i686-elf-gcc $(CFLAGS) -c $< -o $@
 
 # -------------------------

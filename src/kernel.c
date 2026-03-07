@@ -5,13 +5,13 @@ void kernel_main(void)
 {
     
     screen_init();
-    screen_write("Hello, World!\n");
-    screen_write("Line 1\n");
-    screen_write("Line 2\n");
-    screen_write("Line 3\n");
+    // for (int i = 0; i < 30; i++)
+    // {
+    //     screen_write("Scrolling line\n");
+    // }
+    screen_write("Hello World!");
 
     while (1) {
-        // halt CPU to reduce heat
         __asm__("hlt");
     }
 }
