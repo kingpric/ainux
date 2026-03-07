@@ -27,4 +27,14 @@ typedef struct {
  */
 void idt_init();
 
+/*
+ * Set IDT gate
+ */
+void idt_set_gate(uint8_t vector, void (*handler)());
+
+/*
+ * Interrupt handler
+ */
+void interrupt_handler(uint32_t interrupt);
+
 #endif
