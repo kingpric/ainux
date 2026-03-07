@@ -22,8 +22,11 @@ NASMFLAGS= -f elf32 -g
 # -------------------------
 FILES= 	$(BUILD_DIR)/kernel/kernel.o $(BUILD_DIR)/kernel/kernel.asm.o \
 		$(BUILD_DIR)/drivers/screen/screen.o \
-		$(BUILD_DIR)/cpu/idt/idt.o $(BUILD_ARCH_DIR)/idt/idt.asm.o $(BUILD_ARCH_DIR)/idt/isr.asm.o \
-		$(BUILD_ARCH_DIR)/pic/pic.o
+		$(BUILD_ARCH_DIR)/interrupt/idt.asm.o $(BUILD_ARCH_DIR)/interrupt/isr.asm.o \
+		$(BUILD_DIR)/cpu/interrupt/idt.o $(BUILD_DIR)/cpu/interrupt/interrupt.o \
+		$(BUILD_ARCH_DIR)/pic/pic.o \
+		$(BUILD_DIR)/memory/memory.o \
+		$(BUILD_DIR)/drivers/timer/timer.o
 
 
 # -------------------------
@@ -77,6 +80,11 @@ $(BUILD_DIR)/drivers/%.o: $(SRC_DIR)/drivers/%.c
 # CPU objects
 # -------------------------
 $(BUILD_DIR)/cpu/%.o: $(SRC_DIR)/cpu/%.c
+	@mkdir -p $(@D)
+	i686-elf-gcc $(CFLAGS) -c $< -o $@
+
+# Memory objects
+$(BUILD_DIR)/memory/%.o: $(SRC_DIR)/memory/%.c
 	@mkdir -p $(@D)
 	i686-elf-gcc $(CFLAGS) -c $< -o $@
 

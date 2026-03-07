@@ -2,6 +2,7 @@
 #define IDT_H
 
 #include <stdint.h>
+#include "interrupt.h"
 
 /*
  * IDT Entry
@@ -32,9 +33,6 @@ void idt_init();
  */
 void idt_set_gate(uint8_t vector, void (*handler)());
 
-/*
- * Interrupt handler
- */
-void interrupt_handler(uint32_t interrupt);
+
 
 #endif

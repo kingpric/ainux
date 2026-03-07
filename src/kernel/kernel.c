@@ -1,30 +1,24 @@
 #include <stdint.h>
 #include <screen.h>
-#include "cpu/idt/idt.h"
 #include <pic.h>
+
+#include "cpu/interrupt/idt.h"
+#include "drivers/timer/timer.h"
 
 void kernel_main(void)
 {
-    
+    /* Initialize screen or vga*/
     screen_init();
-    // for (int i = 0; i < 30; i++)
-    // {
-    //     screen_write("Scrolling line\n");
-    // }
-    screen_write("Hello again!\n");
+    screen_write("Hello I'm Ainux\n");
 
-    // Initialize IDT
+    /* Initialize Interrupt system*/
     idt_init();
 
-    screen_write("idt initialized\n");
+    /* Initialize system timer*/
+    timer_init();
 
-    pic_remap();
-
-    screen_write("pic remapped\n");
-
+    // Enable interrupts
     __asm__ volatile("sti");
-
-    screen_write("sti enabled\n");
 
     while (1) {
         __asm__("hlt");
