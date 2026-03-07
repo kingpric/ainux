@@ -6,7 +6,10 @@ extern kernel_main
 section .text
 
 _start:
-     mov esp, 0x200000      ; Set stack (2MB)
+
+    ; Set stack pointer to 2MB,
+    ; providing 1MB of space from the kernel start
+    mov esp, 0x200000      
 
     call kernel_main
 
