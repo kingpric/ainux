@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "drivers/screen/screen.h"
+#include <screen.h>
 
 void kernel_main(void)
 {
@@ -9,7 +9,7 @@ void kernel_main(void)
     // {
     //     screen_write("Scrolling line\n");
     // }
-    screen_write("Hello World!");
+    screen_write("Hello again!");
 
     while (1) {
         __asm__("hlt");

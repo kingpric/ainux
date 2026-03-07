@@ -1,25 +1,30 @@
 #include <stdint.h>
 #include "idt.h"
+#include "config.h"
 
-#define IDT_SIZE 256
-
-idt_entry_t idt[IDT_SIZE];
+idt_entry_t idt[INTERRUPT_SIZE];
 idtr_t idtr;
 
 extern void idt_load(idtr_t* idtr);
 
-void idt_set_gate(int n, uint32_t handler)
+/*
+ * Set IDT gate
+ */
+void idt_set_gate(int interrupt_no, uint32_t handler_address)
 {
-    idt[n].offset_low  = handler & 0xFFFF;
-    idt[n].selector    = 0x08;      // kernel code segment
-    idt[n].zero        = 0;
-    idt[n].type_attr   = 0x8E;      // interrupt gate
-    idt[n].offset_high = (handler >> 16) & 0xFFFF;
+    idt[interrupt_no].offset_low  = handler_address & 0xFFFF;
+    idt[interrupt_no].selector    = KERNEL_CODE_SELECTOR;       // kernel code segment
+    idt[interrupt_no].zero        = 0;
+    idt[interrupt_no].type_attr   = 0x8E;                       // interrupt gate
+    idt[interrupt_no].offset_high = (handler_address >> 16) & 0xFFFF;
 }
 
+/*
+ * Initialize IDT
+ */
 void idt_init()
 {
-    idtr.limit = sizeof(idt_entry_t) * IDT_SIZE - 1;
+    idtr.limit = sizeof(idt_entry_t) * INTERRUPT_SIZE - 1;
     idtr.base  = (uint32_t)&idt;
 
     idt_load(&idtr);

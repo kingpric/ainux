@@ -1,5 +1,6 @@
-#include "screen.h"
 #include <stdint.h>
+#include <io.h>
+#include <screen.h>
 
 
 #define VGA_MEMORY 0xB8000
@@ -40,14 +41,14 @@ static void screen_scroll()
     row = VGA_HEIGHT - 1;
 }
 
-static inline void outb(uint16_t port, uint8_t value)
-{
-    __asm__ volatile (
-        "outb %0, %1"
-        :
-        : "a"(value), "Nd"(port)
-    );
-}
+// static inline void outb(uint16_t port, uint8_t value)
+// {
+//     __asm__ volatile (
+//         "outb %0, %1"
+//         :
+//         : "a"(value), "Nd"(port)
+//     );
+// }
 
 static void screen_update_cursor(void)
 {

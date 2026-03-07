@@ -1,19 +1,31 @@
 ARCH = x86
 
+# -------------------------
+# Directories	
+# -------------------------
 SRC_DIR = ./src
 BUILD_DIR = ./build
-SRC_KERNEL_ARCH_DIR = $(SRC_DIR)/kernel/arch/$(ARCH)
-BUILD_KERNEL_ARCH_DIR = $(BUILD_DIR)/kernel/arch/$(ARCH)
 
-INCLUDE= -I./src/
+SRC_ARCH_DIR = $(SRC_DIR)/arch/$(ARCH)
+BUILD_ARCH_DIR = $(BUILD_DIR)/arch/$(ARCH)
+
+# -------------------------
+# Compiler flags
+# -------------------------
+INCLUDE= -I./$(SRC_DIR)/ -I./$(SRC_DIR)/include
 CFLAGS=	$(INCLUDE) -g -std=gnu99 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -Wall -Werror -O0
 LDFLAGS= -T linker.ld
 ASMFLAGS= -f elf32 -g
 
-FILES= 	$(BUILD_DIR)/kernel/kernel.o $(BUILD_KERNEL_ARCH_DIR)/kernel.asm.o \
+# -------------------------
+# Files	
+# -------------------------
+FILES= 	$(BUILD_DIR)/kernel/kernel.o $(BUILD_DIR)/kernel/kernel.asm.o \
 		$(BUILD_DIR)/drivers/screen/screen.o \
 
-
+# -------------------------
+# Targets	
+# -------------------------
 all: $(BUILD_DIR)/disk.img
 
 # -------------------------
@@ -32,13 +44,17 @@ $(BUILD_DIR)/kernel/kernel.o: $(SRC_DIR)/kernel/kernel.c
 	@mkdir -p $(@D)
 	i686-elf-gcc $(CFLAGS) -c $< -o $@
 
-# Build all assembly files in the kernel architecture directory
-$(BUILD_KERNEL_ARCH_DIR)/%.asm.o: $(SRC_KERNEL_ARCH_DIR)/%.asm
+# Build all assembly files in the kernel directory
+$(BUILD_DIR)/kernel/%.asm.o: $(SRC_DIR)/kernel/%.asm
 	@mkdir -p $(@D)
 	nasm $(ASMFLAGS) $< -o $@
 
-# Build all C files in the kernel architecture directory
-$(BUILD_KERNEL_ARCH_DIR)/%.o: $(SRC_KERNEL_ARCH_DIR)/%.c
+# -------------------------
+# Kernel architecture objects
+# -------------------------
+
+# Build all C files in the kernel directory
+$(BUILD_ARCH_DIR)/%.o: $(SRC_ARCH_DIR)/%.c
 	@mkdir -p $(@D)
 	i686-elf-gcc $(CFLAGS) -c $< -o $@
 
