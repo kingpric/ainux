@@ -1,48 +1,24 @@
 [BITS 32]
 
-; global isr32
-; extern interrupt_handler
-
-; isr32:
-;     pusha                  ; Save all general purpose registers      
-
-;     push 32                ; Push the interrupt number      
-
-;     mov eax, esp           ; Move the stack pointer to EAX      
-;     push eax               ; Push the stack pointer to the stack
-
-;     call interrupt_handler ; Call the interrupt handler
-
-;     add esp, 4             ; Remove the interrupt number
-;     add esp, 4             ; Remove the stack pointer
-
-;     popa                   ; Restore all general purpose registers
-;     iret                   ; Return from interrupt
-
-
 extern interrupt_handler
-
-global isr_common_stub
 
 ; ==============================
 ; Common ISR entry
 ; ==============================
 
+global isr_common_stub
 isr_common_stub:
 
-    pusha                       
+    pusha                       ; Push general purpose registers to stack
 
-    mov eax, esp
-    push eax
+    mov eax, esp                ; push current esp to stack so first argument of the function
+    push eax                    ; interrupt_handler contains stack address for interrupt frame
 
     call interrupt_handler
 
-    add esp, 4
-
+    add esp, 4                  
     popa
-
     add esp, 8
-
     iret
 
 
@@ -105,36 +81,23 @@ ISR_NOERR 31
 
 
 ; ==============================
-; Hardware IRQs (PIC remapped)
+; Hardware IRQs (PIC remapped) from ISR_NOERR 32 to ISR_NOERR 47
 ; ==============================
 %assign i 32
 %rep 15
     ISR_NOERR i
 %assign i i+1
 %endrep
-; ISR_NOERR 32
-; ISR_NOERR 33
-; ISR_NOERR 34
-; ISR_NOERR 35
-; ISR_NOERR 36
-; ISR_NOERR 37
-; ISR_NOERR 38
-; ISR_NOERR 39
-; ISR_NOERR 40
-; ISR_NOERR 41
-; ISR_NOERR 42
-; ISR_NOERR 43
-; ISR_NOERR 44
-; ISR_NOERR 45
-; ISR_NOERR 46
-; ISR_NOERR 47
-
 
 %macro interrupt_array_entry 1
 dd isr%1
 %endmacro
 
+; ==============================
+; Interrupt Pointer Table
+; ==============================
 global interrupt_pointer_table
+align 4
 interrupt_pointer_table:
     %assign i 0
     %rep 47
