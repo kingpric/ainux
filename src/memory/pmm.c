@@ -1,3 +1,6 @@
+#include <screen.h>
+#include <stdint.h>
+
 #include "pmm.h"
 
 #define PMM_BITMAP_ADDR 0x200000
@@ -45,9 +48,9 @@ void pmm_mark_usable()
 }
 
 // mark all frames as used that are reserved for kernel
-void pmm_reserve_kernel(uint32_t kernel_start, uint32_t kernel_end)
+void pmm_reserve_range(uint32_t start_addr, uint32_t end_addr)
 {
-    for (uint32_t addr = kernel_start; addr < kernel_end; addr += FRAME_SIZE) {
+    for (uint32_t addr = start_addr; addr < end_addr; addr += FRAME_SIZE) {
         uint32_t frame = addr / FRAME_SIZE;
         set_frame(frame);
     }
@@ -72,6 +75,29 @@ void pmm_free_frame(uint32_t addr)
     clear_frame(frame);
 }
 
+// static void debug_print_e820()
+// {
+//     uint32_t count = *(uint32_t *)0x5000;
+//     e820_entry_t *map = (e820_entry_t *)0x5004;
+
+//     screen_write("E820 entries: ");
+//     screen_write_dec(count);
+//     screen_newline();
+
+//     for (uint32_t i = 0; i < count; i++) {
+//         screen_write("Base: ");
+//         screen_write_hex((uint32_t)map[i].base);
+
+//         screen_write("  Len: ");
+//         screen_write_hex((uint32_t)map[i].length);
+
+//         screen_write("  Type: ");
+//         screen_write_dec(map[i].type);
+
+//         screen_newline();
+//     }
+// }
+
 // initialize bitmap with all frames marked as used
 void pmm_init()
 {
@@ -80,5 +106,28 @@ void pmm_init()
 
     pmm_mark_usable();
 
-    pmm_reserve_kernel((uintptr_t)&kernel_start, (uintptr_t)&kernel_end);
+    // debug_print_e820();
+
+    // screen_write("PMM: bitmap Location: ");
+    // screen_write_hex((uintptr_t)bitmap);
+    // screen_newline();
+
+    // screen_write("PMM: total frames: ");
+    // screen_write_dec(total_frames);
+    // screen_newline();
+
+    // screen_write("PMM: kernel start: ");
+    // screen_write_hex((uintptr_t)&kernel_start);
+    // screen_newline();
+
+    // screen_write("PMM: kernel end: ");
+    // screen_write_hex((uintptr_t)&kernel_end);
+    // screen_newline();
+
+    // pmm_reserve_range((uintptr_t)&kernel_start, (uintptr_t)&kernel_end);
+    // pmm_reserve_range(0x00000000, 0x00100000);
+
+    pmm_reserve_range(0x00000000, 0x00100000);                             // BIOS
+    pmm_reserve_range(kernel_start, kernel_end);                           // kernel
+    pmm_reserve_range(PMM_BITMAP_ADDR, PMM_BITMAP_ADDR + PMM_BITMAP_SIZE); // bitmap
 }

@@ -46,4 +46,10 @@ void screen_backspace();
 // Writes a hexadecimal value to the screen.
 void screen_write_hex(uint32_t value);
 
+// Writes a decimal value to the screen.
+void screen_write_dec(uint32_t value);
+
+// Writes a newline to the screen.
+void screen_newline();
+
 #endif

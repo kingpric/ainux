@@ -30,6 +30,7 @@ void kernel_main(void)
     /* Initialize physical memory manager*/
     pmm_init();
 
+    // testing frame alloc
     uint32_t frame = pmm_alloc_frame();
     screen_write("Frame: ");
     screen_write_hex(frame);

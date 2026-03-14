@@ -141,3 +141,28 @@ void screen_write_hex(uint32_t value)
         screen_put_char(hex[digit]);
     }
 }
+
+void screen_write_dec(uint32_t value)
+{
+    char buffer[16];
+    int i = 0;
+
+    if (value == 0) {
+        screen_put_char('0');
+        return;
+    }
+
+    while (value > 0) {
+        buffer[i++] = '0' + (value % 10);
+        value /= 10;
+    }
+
+    while (i--) {
+        screen_put_char(buffer[i]);
+    }
+}
+
+void screen_newline()
+{
+    screen_put_char('\n');
+}

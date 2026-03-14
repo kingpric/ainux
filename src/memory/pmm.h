@@ -24,7 +24,7 @@ typedef struct {
     uint64_t length;
     uint32_t type;
     uint32_t attr;
-} e820_entry_t;
+} __attribute__((packed)) e820_entry_t;
 
 // Initializes the physical memory manager.
 void pmm_init();
