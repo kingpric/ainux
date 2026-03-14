@@ -6,8 +6,7 @@
 /**
  * CPU interrupt stack frame
  */
-typedef struct interrupt_frame
-{
+typedef struct interrupt_frame {
     uint32_t edi;
     uint32_t esi;
     uint32_t ebp;

@@ -7,35 +7,38 @@
 #include "drivers/timer/timer.h"
 #include "memory/pmm.h"
 
-void kernel_main(void) {
+void kernel_main(void)
+{
 
-  /* Initialize screen or vga*/
-  screen_init();
+    /* Initialize screen or vga*/
+    screen_init();
 
-  screen_write("Hello I'm Ainux\n");
+    screen_write("Hello I'm Ainux\n");
 
-  /* Initialize Interrupt system*/
-  idt_init();
+    /* Initialize Interrupt system*/
+    idt_init();
 
-  /* Initialize PIC*/
-  pic_remap();
+    /* Initialize PIC*/
+    pic_remap();
 
-  /* Initialize system timer*/
-  timer_init();
+    /* Initialize system timer*/
+    timer_init();
 
-  /* Initialize keyboard*/
-  keyboard_init();
+    /* Initialize keyboard*/
+    keyboard_init();
 
-  /* Initialize physical memory manager*/
-  pmm_init();
+    /* Initialize physical memory manager*/
+    pmm_init();
 
-  uint32_t frame = pmm_alloc_frame();
-  screen_write(frame);
+    uint32_t frame = pmm_alloc_frame();
+    screen_write("Frame: ");
+    screen_write_hex(frame);
+    screen_put_char('\n');
 
-  // Enable interrupts
-  __asm__ volatile("sti");
+    // Enable interrupts
+    __asm__ volatile("sti");
 
-  while (1) {
-    __asm__("hlt");
-  }
+    while (1) {
+        __asm__("hlt");
+    }
 }

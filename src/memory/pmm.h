@@ -20,10 +20,10 @@
 
 // e820 memory map entry structure.
 typedef struct {
-  uint64_t base;
-  uint64_t length;
-  uint32_t type;
-  uint32_t attr;
+    uint64_t base;
+    uint64_t length;
+    uint32_t type;
+    uint32_t attr;
 } e820_entry_t;
 
 // Initializes the physical memory manager.

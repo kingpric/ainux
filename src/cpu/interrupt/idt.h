@@ -1,8 +1,8 @@
 #ifndef IDT_H
 #define IDT_H
 
-#include <stdint.h>
 #include "interrupt.h"
+#include <stdint.h>
 
 /*
  * IDT Entry
@@ -10,8 +10,8 @@
 typedef struct {
     uint16_t offset_low;
     uint16_t selector;
-    uint8_t  zero;
-    uint8_t  type_attr;
+    uint8_t zero;
+    uint8_t type_attr;
     uint16_t offset_high;
 } __attribute__((packed)) idt_entry_t;
 
@@ -32,7 +32,5 @@ void idt_init();
  * Set IDT gate
  */
 void idt_set_gate(uint8_t vector, void (*handler)());
-
-
 
 #endif

@@ -1,0 +1,10 @@
+CompileFlags:
+  Add: [
+      # -I./src, -I./src/include,
+      "-ffreestanding",
+      "-m32",
+      "-nostdlib",
+      "-nostdinc",
+      "-Isrc",
+      "-Isrc/include",
+    ]

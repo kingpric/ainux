@@ -1,8 +1,7 @@
-#include "cpu/interrupt/interrupt.h"
 #include "timer.h"
+#include "cpu/interrupt/interrupt.h"
 
 static uint32_t ticks = 0;
-
 
 void timer_handler(interrupt_frame_t *frame)
 {
@@ -10,7 +9,7 @@ void timer_handler(interrupt_frame_t *frame)
         ticks++;
 }
 
-
-void timer_init(){
+void timer_init()
+{
     register_interrupt_handler(TIMER_INTERRUPT_NO, timer_handler);
 }
