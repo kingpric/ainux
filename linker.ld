@@ -4,6 +4,8 @@ SECTIONS
 {
     . = 0x00100000;
 
+    kernel_start = .;
+
     .text : ALIGN(4096)
     {
         *(.text)
@@ -29,4 +31,6 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    kernel_end = .;
 }

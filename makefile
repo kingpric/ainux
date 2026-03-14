@@ -27,7 +27,8 @@ FILES= 	$(BUILD_DIR)/kernel/kernel.asm.o $(BUILD_DIR)/kernel/kernel.o \
 		$(BUILD_ARCH_DIR)/pic/pic.o \
 		$(BUILD_DIR)/memory/memory.o \
 		$(BUILD_DIR)/drivers/timer/timer.o \
-		$(BUILD_DIR)/drivers/keyborad/keyborad.o
+		$(BUILD_DIR)/drivers/keyborad/keyborad.o \
+		$(BUILD_DIR)/memory/pmm.o
 
 
 # -------------------------

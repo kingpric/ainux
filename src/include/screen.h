@@ -1,9 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include <stdint.h>
 #include <stddef.h>
-
+#include <stdint.h>
 
 /**
  * @brief Initializes the screen module.
@@ -37,11 +36,14 @@ void screen_put_char(char c);
  *
  * @param str Pointer to null-terminated string.
  */
-void screen_write(const char* str);
+void screen_write(const char *str);
 
 /**
  * @brief Removes the last character from the screen.
  */
 void screen_backspace();
+
+// Writes a hexadecimal value to the screen.
+void screen_write_hex(uint32_t value);
 
 #endif
