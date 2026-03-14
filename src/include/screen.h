@@ -39,4 +39,9 @@ void screen_put_char(char c);
  */
 void screen_write(const char* str);
 
+/**
+ * @brief Removes the last character from the screen.
+ */
+void screen_backspace();
+
 #endif

@@ -1,0 +1,278 @@
+[BITS 16]
+ORG 0x8000
+
+CODE_SEG                equ gdt_code - gdt_start
+DATA_SEG                equ gdt_data - gdt_start
+
+STACK_ADDR              equ 0x90000
+MEMORY_MAP_ADDR         equ 0x5000
+
+KERNEL_LOAD_ADDR        equ 0x100000
+KERNEL_LBA              equ 2           ; LBA is 0-indexed and kernel C starts from LBA 2
+KERNEL_SECTORS          equ 100
+
+ATA_DATA_PORT           equ 0x1F0
+ATA_SEC_COUNT_PORT      equ 0x1F2
+ATA_LBA_LOW_PORT        equ 0x1F3
+ATA_LBA_MID_PORT        equ 0x1F4
+ATA_LBA_HIGH_PORT       equ 0x1F5
+ATA_DRIVE_PORT          equ 0x1F6
+ATA_STATUS_PORT         equ 0x1F7
+ATA_COMMAND_PORT        equ 0x1F7
+
+ATA_CMD_READ            equ 0x20
+
+; --------------------------------
+; Print start message
+; --------------------------------
+mov si, msg_stage2
+call print_string
+
+; --------------------------------
+; Enable A20
+; --------------------------------
+call enable_a20
+
+mov si, msg_a20
+call print_string
+
+; --------------------------------
+; Detect memory using E820
+; --------------------------------
+mov dword [MEMORY_MAP_ADDR], 0
+call detect_memory_e820
+
+jmp load_gdt
+
+; ----------------------------
+; Enable A20 (Fast method) 
+; ----------------------------
+enable_a20:
+    in al, 0x92         ; read from port 0x92 (system control port)
+    or al, 00000010b    ; set bit 1 (enable A20)
+    out 0x92, al        ; write to port 0x92
+    ret
+
+
+; =================================
+; Detect Memory (E820)
+; =================================
+detect_memory_e820:
+
+    ; ES must be 0
+    xor ax, ax
+    mov es, ax
+
+    ; buffer pointer
+    mov di, MEMORY_MAP_ADDR
+    add di, 4
+
+    ; clear entry count
+    mov dword [MEMORY_MAP_ADDR], 0
+
+    ; EBX continuation
+    xor ebx, ebx
+
+.e820_next:
+
+    mov eax, 0xE820          ; E820h
+    mov edx, 0x534D4150      ; "SMAP"
+    mov ecx, 24              ; buffer size
+
+    ; mov dword [es:di+20], 1   ; <-- REQUIRED FIX
+
+    int 0x15                 ; call BIOS
+    jc .done                 ; if carry set, error
+
+    cmp eax, 0x534D4150      ; compare EAX with "SMAP"
+    jne .done                ; if not equal, done
+
+    ; store entry
+    add di, 24               ; move to next entry
+    inc dword [MEMORY_MAP_ADDR] ; increment entry count
+
+    ;add di, cx      ; <-- use returned size
+    
+    cmp ebx, 0               ; check if more entries
+    jne .e820_next
+
+.done:
+    ret
+
+; ----------------------------
+; Load GDT
+; ----------------------------
+load_gdt:
+    lgdt [gdt_descriptor]
+
+
+; ----------------------------
+; Enable Protected Mode
+; ----------------------------
+enable_pm:
+    mov eax, cr0            ; load cr0 into eax
+    or eax, 1               ; set bit 0 (enable protected mode)
+    mov cr0, eax            ; store cr0 back into cr0
+
+    cld                 ; ensure forward direction
+
+    mov ax, DATA_SEG    ; load data segment selector
+    mov ds, ax          ; set data segment
+    mov es, ax          ; set extra segment
+    mov fs, ax          ; set fs segment
+    mov gs, ax          ; set gs segment
+    mov ss, ax          ; set stack segment
+
+    mov esp, STACK_ADDR ; set stack pointer
+
+
+    ; Far jump to flush pipeline
+    jmp CODE_SEG:protected_mode_entry   ; 0x08 is the code segment selector
+
+
+; ============================
+; GDT Definition
+; https://wiki.osdev.org/Global_Descriptor_Table
+; ============================
+gdt_start:
+
+gdt_null:
+    dq 0x0000000000000000
+
+; 00 CF 9A 00 0000 FFFF
+gdt_code:
+    dw 0xFFFF     ; Limit (0-15)
+    dw 0x0000     ; Base (0-15)
+    db 0x00       ; Base (16-23)
+    db 10011010b  ; Access byte (Present, Ring 0, Code, Executable, Readable)
+    db 11001111b  ; Flags (Granularity 4KB, 32-bit, Limit 16-19)
+    db 0x00       ; Base (24-31)    
+    
+; 00 CF 92 00 0000 FFFF
+gdt_data:
+    dw 0xFFFF     ; Limit (0-15)
+    dw 0x0000     ; Base (0-15)
+    db 0x00       ; Base (16-23)
+    db 10010010b  ; Access byte (Present, Ring 0, Data, Read/Write)
+    db 11001111b  ; Flags (Granularity 4KB, 32-bit, Limit 16-19)
+    db 0x00       ; Base (24-31)
+
+gdt_end:
+
+gdt_descriptor:
+    dw gdt_end - gdt_start - 1  ; size of gdt in bytes, -1 because we are not including the last byte (gdt_end)
+    dd gdt_start                ; start address of gdt
+
+
+
+[BITS 32]
+; ============================
+; 32-bit Protected Mode Code
+; ============================
+protected_mode_entry:
+    call load_kernel
+    jmp KERNEL_LOAD_ADDR
+
+; ----------------------------
+; Load Kernel (6 sectors)
+; ----------------------------
+; global load_kernel
+
+load_kernel:
+
+    mov esi, KERNEL_LBA        ; current LBA
+    mov edi, KERNEL_LOAD_ADDR  ; memory destination
+    mov ecx, KERNEL_SECTORS    ; sector count
+
+.read_sector:
+
+    push ecx
+
+.wait_not_busy:
+    mov dx, ATA_STATUS_PORT
+    in al, dx
+    test al, 0x80              ; BSY
+    jnz .wait_not_busy
+
+    ; -------------------------
+    ; Setup read for 1 sector
+    ; -------------------------
+    mov dx, ATA_SEC_COUNT_PORT
+    mov al, 1
+    out dx, al
+
+    ; --- LBA bits 0-7 ---
+    mov eax, esi
+    mov dx, ATA_LBA_LOW_PORT
+    out dx, al
+
+    ; --- LBA bits 8-15 ---
+    mov eax, esi
+    shr eax, 8
+    mov dx, ATA_LBA_MID_PORT
+    out dx, al
+
+    ; --- LBA bits 16-23 ---
+    mov eax, esi
+    shr eax, 16
+    mov dx, ATA_LBA_HIGH_PORT
+    out dx, al
+
+    ; --- LBA bits 24-27 ---
+    mov eax, esi
+    shr eax, 24
+    and al, 0x0F
+    or  al, 0xE0               ; 1110xxxx (LBA mode, master)
+    mov dx, ATA_DRIVE_PORT
+    out dx, al
+
+    ; Send READ command
+    mov dx, ATA_COMMAND_PORT
+    mov al, ATA_CMD_READ
+    out dx, al
+
+.wait_drq:
+    in al, dx
+    test al, 0x80      ; BSY
+    jnz .wait_drq
+
+    test al, 0x01      ; ERR
+    jnz .disk_error
+
+    test al, 0x08      ; DRQ
+    jz .wait_drq
+
+    ; -------------------------
+    ; Read 512 bytes
+    ; -------------------------
+    mov dx, ATA_DATA_PORT
+    mov ecx, 256
+    rep insw
+
+    pop ecx
+    inc esi
+    loop .read_sector
+
+    ret
+
+.disk_error:
+    cli
+.hang:
+    hlt
+    jmp .hang    
+
+
+; =================================
+; Messages
+; =================================
+msg_stage2 db "Stage2 loader",13,10,0
+msg_a20    db "A20 enabled",13,10,0
+msg_done   db "Memory detection done",13,10,0
+
+msg_map    db "Memory Map:",13,10,0
+msg_region db "Region ",0
+msg_len    db " Len ",0
+msg_type   db " Type ",0
+
+%include "src/boot/functions.asm"
+; %include "src/boot/fn_memory_map.asm"

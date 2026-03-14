@@ -1,0 +1,18 @@
+FILES = build/boot1.bin build/boot2.bin 
+
+all: $(FILES)
+	dd if=/dev/zero of=build/disk.img bs=512 count=50
+	dd if=build/boot1.bin of=build/disk.img bs=512 conv=notrunc
+	dd if=build/boot2.bin of=build/disk.img bs=512 seek=1 conv=notrunc
+
+build/%.bin: src/boot/%.asm
+	mkdir -p $(@D)
+	nasm -f bin -g $< -o $@
+
+run:
+	qemu-system-i386 -drive format=raw,file=build/disk.img -nographic
+
+clean:
+	rm -rf build
+	
+.PHONY: all clean run	

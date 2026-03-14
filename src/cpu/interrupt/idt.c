@@ -51,8 +51,8 @@ void idt_init()
     /* */
     idt_load(&idtr);
 
-    /* */
-    pic_remap();
+    // /* */
+    // pic_remap();
 
 
 

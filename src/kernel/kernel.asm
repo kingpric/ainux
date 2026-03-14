@@ -9,8 +9,9 @@ _start:
 
     ; Set stack pointer to 2MB,
     ; providing 1MB of space from the kernel start
-    mov esp, 0x200000      ;
-
+    mov esp, 0x200000;
+    
+    ; start_kernel
     call kernel_main
 
 .hang:

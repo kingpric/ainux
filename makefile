@@ -18,15 +18,16 @@ LDFLAGS= -T linker.ld
 NASMFLAGS= -f elf32 -g
 
 # -------------------------
-# Files	
+# Files	## Ordering matter kernel.asm.o should be first in the FILES
 # -------------------------
-FILES= 	$(BUILD_DIR)/kernel/kernel.o $(BUILD_DIR)/kernel/kernel.asm.o \
+FILES= 	$(BUILD_DIR)/kernel/kernel.asm.o $(BUILD_DIR)/kernel/kernel.o \
 		$(BUILD_DIR)/drivers/screen/screen.o \
 		$(BUILD_ARCH_DIR)/interrupt/idt.asm.o $(BUILD_ARCH_DIR)/interrupt/isr.asm.o \
 		$(BUILD_DIR)/cpu/interrupt/idt.o $(BUILD_DIR)/cpu/interrupt/interrupt.o \
 		$(BUILD_ARCH_DIR)/pic/pic.o \
 		$(BUILD_DIR)/memory/memory.o \
-		$(BUILD_DIR)/drivers/timer/timer.o
+		$(BUILD_DIR)/drivers/timer/timer.o \
+		$(BUILD_DIR)/drivers/keyborad/keyborad.o
 
 
 # -------------------------
@@ -37,9 +38,14 @@ all: $(BUILD_DIR)/disk.img
 # -------------------------
 # Bootloader (flat binary)	
 # -------------------------
-$(BUILD_DIR)/boot.bin: $(SRC_DIR)/boot/boot.asm
+$(BUILD_DIR)/boot1.bin: $(SRC_DIR)/boot/boot1.asm
 	@mkdir -p $(@D)
 	nasm -f bin $< -o $@
+
+$(BUILD_DIR)/boot2.bin: $(SRC_DIR)/boot/boot2.asm
+	@mkdir -p $(@D)
+	nasm -f bin $< -o $@
+
 
 # -------------------------
 # Kernel objects
@@ -104,11 +110,12 @@ $(BUILD_DIR)/kernel.bin: $(BUILD_DIR)/kernel.elf
 # -------------------------
 # Create disk image
 # -------------------------
-$(BUILD_DIR)/disk.img: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
+$(BUILD_DIR)/disk.img: $(BUILD_DIR)/boot1.bin $(BUILD_DIR)/boot2.bin $(BUILD_DIR)/kernel.bin
 	@mkdir -p $(@D)
 	dd if=/dev/zero of=$@ bs=512 count=2880
-	dd if=$(BUILD_DIR)/boot.bin of=$@ conv=notrunc
-	dd if=$(BUILD_DIR)/kernel.bin of=$@ seek=1 conv=notrunc
+	dd if=$(BUILD_DIR)/boot1.bin of=$@ conv=notrunc
+	dd if=$(BUILD_DIR)/boot2.bin of=$@ seek=1 conv=notrunc
+	dd if=$(BUILD_DIR)/kernel.bin of=$@ seek=2 conv=notrunc
 
 # run final image in qemu 
 run: $(BUILD_DIR)/disk.img

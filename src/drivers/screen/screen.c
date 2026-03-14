@@ -88,6 +88,7 @@ void screen_init()
  */
 void screen_put_char(char c)
 {
+    
     if (c == '\n')
     {
         col = 0;
@@ -131,6 +132,16 @@ void screen_write(const char* str)
     for (size_t i = 0; str[i] != '\0'; i++)
     {
         screen_put_char(str[i]);
+    }
+}
+
+void screen_backspace()
+{
+    if (col > 0)
+    {
+        col--;
+        vga[row * VGA_WIDTH + col] = ' ';
+        screen_update_cursor();
     }
 }
 
