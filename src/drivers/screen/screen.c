@@ -9,8 +9,8 @@
 static volatile uint16_t *const vga = (uint16_t *)VGA_MEMORY;
 
 /* Internal cursor state */
-static size_t row = 0;
-static size_t col = 0;
+static size_t cursor_row = 0;
+static size_t cursor_col = 0;
 
 /* Default color: white on black */
 static uint8_t color = 0x0F;
@@ -32,27 +32,35 @@ static void screen_scroll()
         vga[(VGA_HEIGHT - 1) * VGA_WIDTH + c] = ((uint16_t)color << 8) | ' ';
     }
 
-    row = VGA_HEIGHT - 1;
+    cursor_row = VGA_HEIGHT - 1;
 }
 
-// static inline void outb(uint16_t port, uint8_t value)
-// {
-//     __asm__ volatile (
-//         "outb %0, %1"
-//         :
-//         : "a"(value), "Nd"(port)
-//     );
-// }
+void screen_set_cursor(cursor_pos_t cur_pos)
+{
+    uint16_t pos = cur_pos.row * VGA_WIDTH + cur_pos.col;
+
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t)(pos & 0xFF));
+
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+
+    cursor_row = cur_pos.row;
+    cursor_col = cur_pos.col;
+}
+
+cursor_pos_t screen_get_cursor()
+{
+    cursor_pos_t pos;
+    pos.row = cursor_row;
+    pos.col = cursor_col;
+    return pos;
+}
 
 static void screen_update_cursor(void)
 {
-    uint16_t position = row * VGA_WIDTH + col;
-
-    outb(0x3D4, 0x0F);
-    outb(0x3D5, (uint8_t)(position & 0xFF));
-
-    outb(0x3D4, 0x0E);
-    outb(0x3D5, (uint8_t)((position >> 8) & 0xFF));
+    cursor_pos_t pos = {cursor_row, cursor_col};
+    screen_set_cursor(pos);
 }
 
 /**
@@ -64,8 +72,8 @@ void screen_clear()
         vga[i] = ((uint16_t)color << 8) | ' ';
     }
 
-    row = 0;
-    col = 0;
+    cursor_row = 0;
+    cursor_col = 0;
 }
 
 /**
@@ -83,10 +91,10 @@ void screen_put_char(char c)
 {
 
     if (c == '\n') {
-        col = 0;
-        row++;
+        cursor_col = 0;
+        cursor_row++;
 
-        if (row >= VGA_HEIGHT) {
+        if (cursor_row >= VGA_HEIGHT) {
             screen_scroll();
         }
 
@@ -94,18 +102,18 @@ void screen_put_char(char c)
         return;
     }
 
-    size_t index = row * VGA_WIDTH + col;
+    size_t index = cursor_row * VGA_WIDTH + cursor_col;
 
     uint16_t entry = ((uint16_t)color << 8) | (uint8_t)c;
     vga[index] = entry;
 
-    col++;
+    cursor_col++;
 
-    if (col >= VGA_WIDTH) {
-        col = 0;
-        row++;
+    if (cursor_col >= VGA_WIDTH) {
+        cursor_col = 0;
+        cursor_row++;
 
-        if (row >= VGA_HEIGHT) {
+        if (cursor_row >= VGA_HEIGHT) {
             screen_scroll();
         }
     }
@@ -125,9 +133,9 @@ void screen_write(const char *str)
 
 void screen_backspace()
 {
-    if (col > 0) {
-        col--;
-        vga[row * VGA_WIDTH + col] = ' ';
+    if (cursor_col > 0) {
+        cursor_col--;
+        vga[cursor_row * VGA_WIDTH + cursor_col] = ' ';
         screen_update_cursor();
     }
 }

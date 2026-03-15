@@ -5,7 +5,8 @@
 #include "cpu/interrupt/idt.h"
 #include "drivers/keyborad/keyborad.h"
 #include "drivers/timer/timer.h"
-#include "memory/pmm.h"
+#include "memory/mm/paging.h"
+#include "memory/mm/pmm.h"
 
 void kernel_main(void)
 {
@@ -29,6 +30,11 @@ void kernel_main(void)
 
     /* Initialize physical memory manager*/
     pmm_init();
+    screen_write("PMM initialized\n");
+
+    /* Initialize paging*/
+    paging_init();
+    screen_write("Paging initialized\n");
 
     // testing frame alloc
     uint32_t frame = pmm_alloc_frame();

@@ -128,6 +128,6 @@ void pmm_init()
     // pmm_reserve_range(0x00000000, 0x00100000);
 
     pmm_reserve_range(0x00000000, 0x00100000);                             // BIOS
-    pmm_reserve_range(kernel_start, kernel_end);                           // kernel
+    pmm_reserve_range((uintptr_t)&kernel_start, (uintptr_t)&kernel_end);   // kernel
     pmm_reserve_range(PMM_BITMAP_ADDR, PMM_BITMAP_ADDR + PMM_BITMAP_SIZE); // bitmap
 }

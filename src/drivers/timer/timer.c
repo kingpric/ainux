@@ -1,12 +1,20 @@
 #include "timer.h"
 #include "cpu/interrupt/interrupt.h"
+#include "rtc.h"
+#include "time.h"
 
-static uint32_t ticks = 0;
+static uint32_t tick = 0;
 
 void timer_handler(interrupt_frame_t *frame)
 {
-    if (ticks % 100 == 0)
-        ticks++;
+    tick++;
+
+    time_tick();
+
+    if (tick % 10 == 0) {
+        // time_render();
+        rtc_print();
+    }
 }
 
 void timer_init()

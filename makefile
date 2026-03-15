@@ -26,9 +26,11 @@ FILES= 	$(BUILD_DIR)/kernel/kernel.asm.o $(BUILD_DIR)/kernel/kernel.o \
 		$(BUILD_DIR)/cpu/interrupt/idt.o $(BUILD_DIR)/cpu/interrupt/interrupt.o \
 		$(BUILD_ARCH_DIR)/pic/pic.o \
 		$(BUILD_DIR)/memory/memory.o \
-		$(BUILD_DIR)/drivers/timer/timer.o \
+		$(BUILD_DIR)/drivers/timer/timer.o $(BUILD_DIR)/drivers/timer/time.o \
+		$(BUILD_DIR)/drivers/timer/rtc.o \
 		$(BUILD_DIR)/drivers/keyborad/keyborad.o \
-		$(BUILD_DIR)/memory/pmm.o
+		$(BUILD_DIR)/memory/mm/pmm.o \
+		$(BUILD_ARCH_DIR)/paging/paging.asm.o $(BUILD_DIR)/memory/mm/paging.o
 
 
 # -------------------------

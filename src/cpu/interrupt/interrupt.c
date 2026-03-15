@@ -1,10 +1,10 @@
 #include <config.h>
 #include <io.h>
+#include <memory.h>
 #include <screen.h>
 #include <stdint.h>
 
 #include "interrupt.h"
-#include "memory/memory.h"
 
 interrupt_handler_t interrupt_handlers[INTERRUPT_SIZE];
 

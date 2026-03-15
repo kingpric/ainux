@@ -1,12 +1,12 @@
 #include <config.h>
 #include <io.h>
+#include <memory.h>
 #include <pic.h>
 #include <screen.h>
 #include <stdint.h>
 
 #include "idt.h"
 #include "interrupt.h"
-#include "memory/memory.h"
 
 extern void idt_load(idtr_t *idtr);
 
