@@ -37,13 +37,23 @@ void kernel_main(void)
     screen_write("Paging initialized\n");
 
     // testing frame alloc
-    uint32_t frame = pmm_alloc_frame();
-    screen_write("Frame: ");
-    screen_write_hex(frame);
-    screen_put_char('\n');
+    // uint32_t frame = pmm_alloc_frame();
+    // screen_write("Frame: ");
+    // screen_write_hex(frame);
+    // screen_put_char('\n');
+
+    page_test();
 
     // Enable interrupts
     __asm__ volatile("sti");
+
+    // // testing page fault
+    // uint32_t *test = (uint32_t *)0x500000;
+    // uint32_t value = *test;
+
+    // screen_write("Value: ");
+    // screen_write_hex(value);
+    // screen_put_char('\n');
 
     while (1) {
         __asm__("hlt");

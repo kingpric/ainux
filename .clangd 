@@ -1,6 +1,5 @@
 CompileFlags:
   Add: [
-      # -I./src, -I./src/include,
       "-ffreestanding",
       "-m32",
       "-nostdlib",

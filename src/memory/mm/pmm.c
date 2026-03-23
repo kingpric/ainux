@@ -22,6 +22,8 @@ static inline void clear_frame(uint32_t frame)
     bitmap[frame / 8] &= ~(1 << (frame % 8));
 }
 
+// test if a frame is used
+// returns 1 if used, 0 if free
 static inline int test_frame(uint32_t frame)
 {
     return bitmap[frame / 8] & (1 << (frame % 8));

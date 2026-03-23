@@ -1,14 +1,26 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-#include "pmm.h"
 #include <stdint.h>
+
+#include "cpu/interrupt/interrupt.h"
+#include "pmm.h"
 
 #define PAGE_SIZE FRAME_SIZE      // 4KB
 #define DIRECTORY_SIZE FRAME_SIZE // 4KB
 
 #define TOTAL_ENTRIES_IN_PAGE_TABLE 1024
 #define TOTAL_ENTRIES_IN_PAGE_DIRECTORY 1024
+
+#define PAGE_DIR_VIRT 0xFFFFF000
+#define PAGE_TABLES_VIRT 0xFFC00000
+
+/*
+ * Helpers to access paging structures
+ */
+#define GET_PAGE_DIRECTORY() ((uint32_t *)PAGE_DIR_VIRT)
+
+#define GET_PAGE_TABLE(i) ((uint32_t *)(PAGE_TABLES_VIRT + ((i) * 0x1000)))
 
 /*
  * Paging structures
@@ -25,15 +37,14 @@ typedef uint32_t page_table_t[PAGE_SIZE];
 #define PAGE_CACHE_DISABLE 0x10
 
 // Global page directory pointer
-extern uint32_t *kernel_page_directory;
+// extern uint32_t *kernel_page_directory;
 
 // Initialize paging
 void paging_init();
 
-// // Load page directory
-// void load_page_directory(uint32_t *pd);
+// Page fault handler
+void page_fault_handler(interrupt_frame_t *frame);
 
-// // Enable paging
-// void enable_paging();
+void page_test();
 
 #endif

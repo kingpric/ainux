@@ -63,9 +63,7 @@ static void screen_update_cursor(void)
     screen_set_cursor(pos);
 }
 
-/**
- * @brief Clears entire VGA text buffer.
- */
+// Clears entire VGA text buffer.
 void screen_clear()
 {
     for (size_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
@@ -76,17 +74,13 @@ void screen_clear()
     cursor_col = 0;
 }
 
-/**
- * @brief Initializes screen module.
- */
+// Initializes screen module.
 void screen_init()
 {
     screen_clear();
 }
 
-/**
- * @brief Writes single character at current cursor position.
- */
+// Writes single character at current cursor position.
 void screen_put_char(char c)
 {
 
@@ -121,9 +115,7 @@ void screen_put_char(char c)
     screen_update_cursor();
 }
 
-/**
- * @brief Writes a null-terminated string.
- */
+// Writes a null-terminated string.
 void screen_write(const char *str)
 {
     for (size_t i = 0; str[i] != '\0'; i++) {
